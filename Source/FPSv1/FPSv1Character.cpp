@@ -26,6 +26,23 @@ AFPSv1Character::AFPSv1Character()
 	bUseControllerRotationYaw = false;
 	bUseControllerRotationRoll = false;
 
+
+	// Mesh, Gun
+	
+	FP_Gun = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("FP_Gun"));
+	static ConstructorHelpers::FObjectFinder<USkeletalMesh> FP_Gun_Mesh(TEXT("SkeletalMesh'/Game/FPWeapon/Mesh/SK_FPGun.SK_FPGun'"));
+	if (FP_Gun_Mesh.Succeeded())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("FP_Gun_Mesh.Succeeded() true"));
+		FP_Gun->SetSkeletalMesh(FP_Gun_Mesh.Object);
+	}
+	FP_Gun->SetupAttachment(RootComponent);
+
+	FP_MuzzleLocation = CreateDefaultSubobject<USceneComponent>(TEXT("MuzzleLocation"));
+	FP_MuzzleLocation->SetupAttachment(FP_Gun);
+	FP_MuzzleLocation->SetRelativeLocation(FVector(0.2f, 48.4f, -10.6f));
+
+
 	// Configure character movement
 	GetCharacterMovement()->bOrientRotationToMovement = true; // Character moves in the direction of input...	
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 540.0f, 0.0f); // ...at this rotation rate
@@ -72,6 +89,14 @@ void AFPSv1Character::TurnAtRate(float Rate)
 {
 	// calculate delta for this frame from the rate information
 	AddControllerYawInput(Rate * BaseTurnRate * GetWorld()->GetDeltaSeconds());
+}
+
+void AFPSv1Character::BeginPlay()
+{
+
+	Super::BeginPlay();
+	
+	FP_Gun->AttachToComponent(GetMesh(), FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), TEXT("GripPoint"));
 }
 
 void AFPSv1Character::MoveForward(float Value)
