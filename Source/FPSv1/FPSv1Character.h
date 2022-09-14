@@ -18,6 +18,7 @@ class AFPSv1Character : public ACharacter
 	/** Follow camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class UCameraComponent* FollowCamera;
+
 public:
 	AFPSv1Character();
 
@@ -34,6 +35,12 @@ public:
 
 	UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
 	USceneComponent* FP_MuzzleLocation;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	float UpDown;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	float RightLeft;
 
 
 protected:
@@ -62,5 +69,10 @@ public:
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+
+	float GetUpDown();
+
+	float GetRightLeft();
+
 };
 
