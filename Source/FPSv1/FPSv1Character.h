@@ -36,6 +36,12 @@ public:
 	UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
 	USceneComponent* FP_MuzzleLocation;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Play)
+	FVector GunOffset;
+
+	UPROPERTY(EditDefaultsOnly, Category = ProjectileClass)
+	TSubclassOf<class AMyProjectile> ProjectileClass;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	float UpDown;
 
@@ -58,6 +64,8 @@ protected:
 	 * @param Rate	This is a normalized rate, i.e. 1.0 means 100% of desired turn rate
 	 */
 	void TurnAtRate(float Rate);
+
+	void OnFire();
 
 protected:
 	// APawn interface
