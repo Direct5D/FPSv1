@@ -8,6 +8,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Controller.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Animation/AnimInstance.h"
 #include "MyProjectile.h"
 
 //////////////////////////////////////////////////////////////////////////
@@ -34,7 +35,6 @@ AFPSv1Character::AFPSv1Character()
 	static ConstructorHelpers::FObjectFinder<USkeletalMesh> FP_Gun_Mesh(TEXT("SkeletalMesh'/Game/FPWeapon/Mesh/SK_FPGun.SK_FPGun'"));
 	if (FP_Gun_Mesh.Succeeded())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("FP_Gun_Mesh.Succeeded() true"));
 		FP_Gun->SetSkeletalMesh(FP_Gun_Mesh.Object);
 	}
 	FP_Gun->SetupAttachment(RootComponent);
@@ -46,6 +46,21 @@ AFPSv1Character::AFPSv1Character()
 	// Default offset from the character location for projectiles to spawn
 	GunOffset = FVector(100.0f, 0.0f, 10.0f);
 
+
+	static ConstructorHelpers::FObjectFinder<UAnimMontage> AM(TEXT("AnimMontage'/Game/Mannequin/Animations/FireAnimMontage.FireAnimMontage'"));
+	if (AM.Succeeded())
+	{
+		FireAnimation = AM.Object;
+	}
+
+	static ConstructorHelpers::FClassFinder<AMyProjectile> P(TEXT("Blueprint'/Game/ThirdPersonCPP/Blueprints/BP_MyProjectile.BP_MyProjectile_C'"));
+	if (P.Succeeded())
+	{
+		ProjectileClass = P.Class;
+		//UE_LOG(LogTemp, Warning, TEXT("Projectile class registeration"));
+	}
+	//ProjectileClass = CreateDefaultSubobject<AMyProjectile>(TEXT("PC"))->StaticClass();
+
 	// Configure character movement
 	GetCharacterMovement()->bOrientRotationToMovement = false; // Character moves in the direction of input...	
 	GetCharacterMovement()->RotationRate = FRotator(0.0f, 540.0f, 0.0f); // ...at this rotation rate
@@ -55,7 +70,7 @@ AFPSv1Character::AFPSv1Character()
 	// Create a camera boom (pulls in towards the player if there is a collision)
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(RootComponent);
-	CameraBoom->TargetArmLength = 500.0f; // The camera follows at this distance behind the character	
+	CameraBoom->TargetArmLength = 300.0f; // The camera follows at this distance behind the character	
 	CameraBoom->bUsePawnControlRotation = true; // Rotate the arm based on the controller
 
 	// Create a follow camera
@@ -123,6 +138,15 @@ void AFPSv1Character::OnFire()
 		// spawn the projectile at the muzzle
 		World->SpawnActor<AMyProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
 	}
+
+	if (FireAnimation != nullptr)
+	{
+		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		if (AnimInstance != nullptr)
+		{
+			AnimInstance->Montage_Play(FireAnimation);
+		}
+	}
 }
 
 void AFPSv1Character::BeginPlay()
@@ -160,7 +184,6 @@ void AFPSv1Character::MoveRight(float Value)
 	
 		// get right vector 
 		const FVector Direction = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
-
 
 		// add movement in that direction
 		AddMovementInput(GetActorRightVector(), Value);

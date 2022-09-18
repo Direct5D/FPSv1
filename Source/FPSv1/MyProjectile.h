@@ -13,7 +13,10 @@ UCLASS()
 class FPSV1_API AMyProjectile : public AActor
 {
 	GENERATED_BODY()
-	
+
+	UPROPERTY(EditAnywhere, Category = Projectile)
+	UStaticMeshComponent* StaticMeshComp;
+
 	/** Sphere collision component */
 	UPROPERTY(VisibleDefaultsOnly, Category = Projectile)
 	USphereComponent* CollisionComp;

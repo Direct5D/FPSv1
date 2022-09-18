@@ -13,13 +13,29 @@ AMyProjectile::AMyProjectile()
 
 	CollisionComp = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComp"));
 	CollisionComp->InitSphereRadius(3.0f);
+	CollisionComp->SetCollisionObjectType(ECC_GameTraceChannel1);
 	CollisionComp->BodyInstance.SetCollisionProfileName(TEXT("Projectile"));
+	
 	CollisionComp->OnComponentHit.AddDynamic(this, &AMyProjectile::OnHit);
 
 	CollisionComp->SetWalkableSlopeOverride(FWalkableSlopeOverride(WalkableSlope_Unwalkable, 0.f));
 	CollisionComp->CanCharacterStepUpOn = ECB_No;
 
 	RootComponent = CollisionComp;
+
+
+	StaticMeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMeshComp"));
+	if (StaticMeshComp)
+	{
+		static ConstructorHelpers::FObjectFinder<UStaticMesh> SM(TEXT("StaticMesh'/Game/ThirdPerson/Meshes/ProjectileMesh.FirstPersonProjectileMesh'"));
+		if (SM.Succeeded())
+		{	
+			StaticMeshComp->SetStaticMesh(SM.Object);
+			StaticMeshComp->SetupAttachment(RootComponent);
+			StaticMeshComp->SetRelativeScale3D(FVector(0.1f, 0.1f, 0.1f));
+		}
+	}
+
 
 	ProjectileMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovement"));
 	ProjectileMovement->UpdatedComponent = CollisionComp;
@@ -33,9 +49,18 @@ AMyProjectile::AMyProjectile()
 
 void AMyProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-	if ((OtherActor != nullptr) && (OtherActor != this) && (OtherComp != nullptr) && (OtherComp->IsSimulatingPhysics()))
+	if ((OtherActor != nullptr) && (OtherActor != this) && (OtherComp != nullptr))
 	{
-		OtherComp->AddImpulseAtLocation(GetVelocity() * 100.f, GetActorLocation());
+		
+		if (OtherComp->ComponentHasTag(TEXT("Player")))
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Player has Shot"));
+		}
+		else if (OtherComp->IsSimulatingPhysics())
+		{
+			OtherComp->AddImpulseAtLocation(GetVelocity() * 10.f, GetActorLocation());
+		}
+		
 		Destroy();
 	}
 }

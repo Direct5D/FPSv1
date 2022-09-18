@@ -6,6 +6,10 @@
 #include "GameFramework/Character.h"
 #include "FPSv1Character.generated.h"
 
+
+class AMyProjectile;
+class UAnimMontage;
+
 UCLASS(config=Game)
 class AFPSv1Character : public ACharacter
 {
@@ -40,7 +44,12 @@ public:
 	FVector GunOffset;
 
 	UPROPERTY(EditDefaultsOnly, Category = ProjectileClass)
-	TSubclassOf<class AMyProjectile> ProjectileClass;
+	TSubclassOf<AMyProjectile> ProjectileClass;
+
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
+	UAnimMontage* FireAnimation;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	float UpDown;
