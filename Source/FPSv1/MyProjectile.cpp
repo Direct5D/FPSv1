@@ -2,8 +2,10 @@
 
 
 #include "MyProjectile.h"
+#include "FPSv1Character.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Components/SphereComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 AMyProjectile::AMyProjectile()
@@ -51,16 +53,23 @@ void AMyProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPri
 {
 	if ((OtherActor != nullptr) && (OtherActor != this) && (OtherComp != nullptr))
 	{
-		
+		AActor* PlayerActor = Cast<AActor>(UGameplayStatics::GetPlayerPawn(GetWorld(), 0));
+		//UE_LOG(LogTemp, Warning, TEXT("OtherActor Name : %s"), *OtherActor->GetName());
+		//if(OtherActor == PlayerActor)
 		if (OtherComp->ComponentHasTag(TEXT("Player")))
 		{
 			UE_LOG(LogTemp, Warning, TEXT("Player has Shot"));
 		}
-		else if (OtherComp->IsSimulatingPhysics())
+		else
 		{
-			OtherComp->AddImpulseAtLocation(GetVelocity() * 10.f, GetActorLocation());
+			//UE_LOG(LogTemp, Warning, TEXT("Comp has Shot"));
+			if (OtherComp->IsSimulatingPhysics())
+			{
+				//UE_LOG(LogTemp, Warning, TEXT("Simulating Comp has Shot"));
+				OtherComp->AddImpulseAtLocation(GetVelocity() * 100.f, GetActorLocation());
+			}
+
+			Destroy();
 		}
-		
-		Destroy();
 	}
 }
