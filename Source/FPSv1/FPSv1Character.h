@@ -10,10 +10,14 @@
 class AMyProjectile;
 class UAnimMontage;
 
+
 UCLASS(config=Game)
 class AFPSv1Character : public ACharacter
 {
 	GENERATED_BODY()
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	class UCameraComponent* FPCamera;
 
 	/** Camera boom positioning the camera behind the character */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
@@ -34,6 +38,7 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
 	float BaseLookUpRate;
 
+
 	UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
 	USkeletalMeshComponent* FP_Gun;
 
@@ -50,6 +55,12 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
 	UAnimMontage* FireAnimation;
+
+	UPROPERTY(VisibleAnyWhere)
+	class UMyStatComponent* Stat;
+
+	UPROPERTY(EditAnyWhere)
+	FName Name = "toto";
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	float UpDown;
@@ -75,6 +86,8 @@ protected:
 	void TurnAtRate(float Rate);
 
 	void OnFire();
+
+	void ToggleCameraPerspective();
 
 protected:
 	// APawn interface

@@ -10,6 +10,7 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Animation/AnimInstance.h"
 #include "MyProjectile.h"
+#include "MyStatComponent.h"
 
 //////////////////////////////////////////////////////////////////////////
 // AFPSv1Character
@@ -67,6 +68,12 @@ AFPSv1Character::AFPSv1Character()
 	GetCharacterMovement()->JumpZVelocity = 600.f;
 	GetCharacterMovement()->AirControl = 0.2f;
 
+
+	FPCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FPCamera"));
+	//FPCamera->SetRelativeRotation(FRotator(0.f, 90.f, 270.f).Quaternion());
+	FPCamera->SetupAttachment(RootComponent);
+	FPCamera->SetActive(true);
+
 	// Create a camera boom (pulls in towards the player if there is a collision)
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(RootComponent);
@@ -78,9 +85,11 @@ AFPSv1Character::AFPSv1Character()
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
 	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 	//FollowCamera->bUsePawnControlRotation = true;
-
+	FollowCamera->SetActive(false);
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named MyCharacter (to avoid direct content references in C++)
+
+	Stat = CreateDefaultSubobject<UMyStatComponent>(TEXT("Stat"));
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -93,6 +102,7 @@ void AFPSv1Character::SetupPlayerInputComponent(class UInputComponent* PlayerInp
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
 	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &AFPSv1Character::OnFire);
+	PlayerInputComponent->BindAction("ToggleCameraPerspective", IE_Pressed, this, &AFPSv1Character::ToggleCameraPerspective);
 
 	PlayerInputComponent->BindAxis("MoveForward", this, &AFPSv1Character::MoveForward);
 	PlayerInputComponent->BindAxis("MoveRight", this, &AFPSv1Character::MoveRight);
@@ -149,12 +159,30 @@ void AFPSv1Character::OnFire()
 	}
 }
 
+void AFPSv1Character::ToggleCameraPerspective()
+{
+	if (FPCamera->IsActive())
+	{
+		FPCamera->SetActive(false);
+		FollowCamera->SetActive(true);
+	}
+	else
+	{
+		FollowCamera->SetActive(false);
+		FPCamera->SetActive(true);
+	}
+	return;
+}
+
 void AFPSv1Character::BeginPlay()
 {
+	Super::BeginPlay(); 
 
-	Super::BeginPlay();
-	
 	FP_Gun->AttachToComponent(GetMesh(), FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), TEXT("GripPoint"));
+	//FPCamera->AttachToComponent(GetMesh(), FAttachmentTransformRules(EAttachmentRule::KeepRelative, true), TEXT("head"));
+	//FPCamera->SetRelativeRotation(FRotator(0.f, 90.f, 270.f).Quaternion());
+
+	Stat->SetStat(Name);
 }
 
 void AFPSv1Character::MoveForward(float Value)
