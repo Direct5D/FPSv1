@@ -7,6 +7,7 @@
 #include "Components/SphereComponent.h"
 #include "Kismet/GameplayStatics.h"
 
+
 // Sets default values
 AMyProjectile::AMyProjectile()
 {
@@ -14,7 +15,7 @@ AMyProjectile::AMyProjectile()
 	// PrimaryActorTick.bCanEverTick = true;
 
 	CollisionComp = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComp"));
-	CollisionComp->InitSphereRadius(3.0f);
+	CollisionComp->InitSphereRadius(0.556f);
 	CollisionComp->SetCollisionObjectType(ECC_GameTraceChannel1);
 	CollisionComp->BodyInstance.SetCollisionProfileName(TEXT("Projectile"));
 	
@@ -34,17 +35,18 @@ AMyProjectile::AMyProjectile()
 		{	
 			StaticMeshComp->SetStaticMesh(SM.Object);
 			StaticMeshComp->SetupAttachment(RootComponent);
-			StaticMeshComp->SetRelativeScale3D(FVector(0.1f, 0.1f, 0.1f));
+			StaticMeshComp->SetRelativeScale3D(FVector(0.005f, 0.005f, 0.005f));
 		}
 	}
 
 
 	ProjectileMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovement"));
 	ProjectileMovement->UpdatedComponent = CollisionComp;
-	ProjectileMovement->InitialSpeed = 3000.f;
-	ProjectileMovement->MaxSpeed = 3000.f;
+	ProjectileMovement->InitialSpeed = 1000.f;
+	ProjectileMovement->MaxSpeed = 1000.f;
 	ProjectileMovement->bRotationFollowsVelocity = true;
 	ProjectileMovement->bShouldBounce = true;
+
 
 	InitialLifeSpan = 3.0f;
 }
@@ -65,7 +67,7 @@ void AMyProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPri
 			//UE_LOG(LogTemp, Warning, TEXT("Comp has Shot"));
 			if (OtherComp->IsSimulatingPhysics())
 			{
-				//UE_LOG(LogTemp, Warning, TEXT("Simulating Comp has Shot"));
+				UE_LOG(LogTemp, Warning, TEXT("Simulating Comp has Shot"));
 				OtherComp->AddImpulseAtLocation(GetVelocity() * 100.f, GetActorLocation());
 			}
 

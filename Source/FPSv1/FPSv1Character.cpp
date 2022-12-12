@@ -11,6 +11,8 @@
 #include "Animation/AnimInstance.h"
 #include "MyProjectile.h"
 #include "MyStatComponent.h"
+#include "DrawDebugHelpers.h"
+
 
 //////////////////////////////////////////////////////////////////////////
 // AFPSv1Character
@@ -71,14 +73,20 @@ AFPSv1Character::AFPSv1Character()
 
 	FPCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FPCamera"));
 	//FPCamera->SetRelativeRotation(FRotator(0.f, 90.f, 270.f).Quaternion());
+	FPCamera->SetRelativeLocation(FVector(40.f, 0.f, 60.f));
 	FPCamera->SetupAttachment(RootComponent);
 	FPCamera->SetActive(true);
 
 	// Create a camera boom (pulls in towards the player if there is a collision)
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(RootComponent);
-	CameraBoom->TargetArmLength = 300.0f; // The camera follows at this distance behind the character	
-	CameraBoom->bUsePawnControlRotation = true; // Rotate the arm based on the controller
+	//CameraBoom->TargetArmLength = 300.0f; // The camera follows at this distance behind the character	
+	CameraBoom->TargetArmLength = 145.f;
+	CameraBoom->SetRelativeLocation(FVector(0.f, 0.f, 77.f));
+	CameraBoom->SetRelativeRotation(FRotator(-20.f, 0.f, 0.f));
+	
+	
+	//CameraBoom->bUsePawnControlRotation = true; // Rotate the arm based on the controller
 
 	// Create a follow camera
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
@@ -112,7 +120,8 @@ void AFPSv1Character::SetupPlayerInputComponent(class UInputComponent* PlayerInp
 	// "turnrate" is for devices that we choose to treat as a rate of change, such as an analog joystick
 	PlayerInputComponent->BindAxis("Turn", this, &APawn::AddControllerYawInput);
 	PlayerInputComponent->BindAxis("TurnRate", this, &AFPSv1Character::TurnAtRate);
-	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
+	//PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
+	PlayerInputComponent->BindAxis("LookUp", this, &AFPSv1Character::AddPitchInput);
 }
 
 float AFPSv1Character::GetUpDown()
@@ -123,6 +132,26 @@ float AFPSv1Character::GetUpDown()
 float AFPSv1Character::GetRightLeft()
 {
 	return RightLeft;
+}
+
+void AFPSv1Character::AddPitchInput(float Value)
+{
+	APawn::AddControllerPitchInput(Value);
+
+	if (FPCamera->IsActive())
+	{
+		float CameraPitchValue = FPCamera->GetRelativeRotation().Pitch;
+		if((Value <= 0 && CameraPitchValue <= 70.f) || (Value >= 0 && CameraPitchValue >= -70.f))
+			FPCamera->AddRelativeRotation(FRotator(-Value, 0.f, 0.f));
+	}
+	else
+	{
+		//CameraBoom->AddRelativeRotation(FRotator(-Value, 0.f, 0.f));
+		float CameraPitchValue = CameraBoom->GetRelativeRotation().Pitch;
+		if ((Value <= 0 && CameraPitchValue <= 70.f) || (Value >= 0 && CameraPitchValue >= -70.f))
+			CameraBoom->AddRelativeRotation(FRotator(-Value, 0.f, 0.f));
+	}
+	
 }
 
 void AFPSv1Character::TurnAtRate(float Rate)
@@ -139,7 +168,9 @@ void AFPSv1Character::OnFire()
 
 		const FRotator SpawnRotation = GetControlRotation();
 		// MuzzleOffset is in camera space, so transform it to world space before offsetting from the character location to find the final muzzle position
-		const FVector SpawnLocation = ((FP_MuzzleLocation != nullptr) ? FP_MuzzleLocation->GetComponentLocation() : GetActorLocation()) + SpawnRotation.RotateVector(GunOffset);
+		// const FVector SpawnLocation = ((FP_MuzzleLocation != nullptr) ? FP_MuzzleLocation->GetComponentLocation() : GetActorLocation()) + SpawnRotation.RotateVector(GunOffset);
+		const FVector SpawnLocation = GetActorLocation() + SpawnRotation.RotateVector(GunOffset);
+
 
 		//Set Spawn Collision Handling Override
 		FActorSpawnParameters ActorSpawnParams;
@@ -147,6 +178,8 @@ void AFPSv1Character::OnFire()
 
 		// spawn the projectile at the muzzle
 		World->SpawnActor<AMyProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
+		DrawDebugLine(GetWorld(), SpawnLocation, SpawnLocation + SpawnRotation.Vector() * 10000.f, FColor::Red, false, 10.0f);
+		UE_LOG(LogTemp, Warning, TEXT("PlayerSpawnRotation : %s"), *SpawnRotation.ToString());
 	}
 
 	if (FireAnimation != nullptr)
