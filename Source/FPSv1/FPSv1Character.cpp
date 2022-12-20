@@ -167,6 +167,10 @@ void AFPSv1Character::OnFire()
 		UWorld* const World = GetWorld();
 
 		const FRotator SpawnRotation = GetControlRotation();
+		const FRotator BaseAimRotation = GetBaseAimRotation();
+
+
+		UE_LOG(LogTemp, Warning, TEXT("ControlRotation : %s | BaseAimRotation : %s"), *SpawnRotation.ToString(), *BaseAimRotation.ToString());
 		// MuzzleOffset is in camera space, so transform it to world space before offsetting from the character location to find the final muzzle position
 		// const FVector SpawnLocation = ((FP_MuzzleLocation != nullptr) ? FP_MuzzleLocation->GetComponentLocation() : GetActorLocation()) + SpawnRotation.RotateVector(GunOffset);
 		const FVector SpawnLocation = GetActorLocation() + SpawnRotation.RotateVector(GunOffset);
@@ -179,7 +183,7 @@ void AFPSv1Character::OnFire()
 		// spawn the projectile at the muzzle
 		World->SpawnActor<AMyProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
 		DrawDebugLine(GetWorld(), SpawnLocation, SpawnLocation + SpawnRotation.Vector() * 10000.f, FColor::Red, false, 10.0f);
-		UE_LOG(LogTemp, Warning, TEXT("PlayerSpawnRotation : %s"), *SpawnRotation.ToString());
+		//UE_LOG(LogTemp, Warning, TEXT("PlayerSpawnRotation : %s"), *SpawnRotation.ToString());
 	}
 
 	if (FireAnimation != nullptr)
