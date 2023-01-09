@@ -33,6 +33,12 @@ AFPSv1Character::AFPSv1Character()
 
 
 	// Mesh, Gun
+	CharacterMeshComponent = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("CharacterMesh"));
+	static ConstructorHelpers::FObjectFinder<USkeletalMesh> CharacterMesh(TEXT("SkeletalMesh'/Game/Mannequin/Character/Mesh/SK_Mannequin.SK_Mannequin'"));
+	if (CharacterMesh.Succeeded())
+	{
+		CharacterMeshComponent->SetSkeletalMesh(CharacterMesh.Object);
+	}
 	
 	FP_Gun = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("FP_Gun"));
 	static ConstructorHelpers::FObjectFinder<USkeletalMesh> FP_Gun_Mesh(TEXT("SkeletalMesh'/Game/FPWeapon/Mesh/SK_FPGun.SK_FPGun'"));
@@ -48,7 +54,6 @@ AFPSv1Character::AFPSv1Character()
 
 	// Default offset from the character location for projectiles to spawn
 	GunOffset = FVector(100.0f, 0.0f, 10.0f);
-
 
 	static ConstructorHelpers::FObjectFinder<UAnimMontage> AM(TEXT("AnimMontage'/Game/Mannequin/Animations/FireAnimMontage.FireAnimMontage'"));
 	if (AM.Succeeded())
@@ -76,6 +81,8 @@ AFPSv1Character::AFPSv1Character()
 	FPCamera->SetRelativeLocation(FVector(40.f, 0.f, 60.f));
 	FPCamera->SetupAttachment(RootComponent);
 	FPCamera->SetActive(true);
+
+	CharacterMeshComponent->SetupAttachment(FPCamera);
 
 	// Create a camera boom (pulls in towards the player if there is a collision)
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
@@ -169,8 +176,8 @@ void AFPSv1Character::OnFire()
 		const FRotator SpawnRotation = GetControlRotation();
 		const FRotator BaseAimRotation = GetBaseAimRotation();
 
-
-		UE_LOG(LogTemp, Warning, TEXT("ControlRotation : %s | BaseAimRotation : %s"), *SpawnRotation.ToString(), *BaseAimRotation.ToString());
+		
+		UE_LOG(LogTemp, Warning, TEXT("CameraRotation : %s | ControlRotation : %s | BaseAimRotation : %s"), *FPCamera->GetRelativeRotation().ToString() , *SpawnRotation.ToString(), *BaseAimRotation.ToString());
 		// MuzzleOffset is in camera space, so transform it to world space before offsetting from the character location to find the final muzzle position
 		// const FVector SpawnLocation = ((FP_MuzzleLocation != nullptr) ? FP_MuzzleLocation->GetComponentLocation() : GetActorLocation()) + SpawnRotation.RotateVector(GunOffset);
 		const FVector SpawnLocation = GetActorLocation() + SpawnRotation.RotateVector(GunOffset);
@@ -188,7 +195,7 @@ void AFPSv1Character::OnFire()
 
 	if (FireAnimation != nullptr)
 	{
-		UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+		UAnimInstance* AnimInstance = CharacterMeshComponent->GetAnimInstance();
 		if (AnimInstance != nullptr)
 		{
 			AnimInstance->Montage_Play(FireAnimation);
@@ -214,8 +221,8 @@ void AFPSv1Character::ToggleCameraPerspective()
 void AFPSv1Character::BeginPlay()
 {
 	Super::BeginPlay(); 
-
-	FP_Gun->AttachToComponent(GetMesh(), FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), TEXT("GripPoint"));
+	
+	FP_Gun->AttachToComponent(CharacterMeshComponent, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), TEXT("GripPoint"));
 	//FPCamera->AttachToComponent(GetMesh(), FAttachmentTransformRules(EAttachmentRule::KeepRelative, true), TEXT("head"));
 	//FPCamera->SetRelativeRotation(FRotator(0.f, 90.f, 270.f).Quaternion());
 
